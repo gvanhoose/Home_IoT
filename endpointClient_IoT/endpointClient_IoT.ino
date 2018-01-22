@@ -6,10 +6,8 @@
 #define DEV_ID "192.168.2.18"
 #define DEV_PORT 5002
 #define NETWORK_NAME "belkin.f3a"
-#define NETWORK_PW "fe6e666e"
+#define NETWORK_PW "nice_try"
 #define BUFFER_LENGTH 256
-//const char* ssid     = "belkin.f3a";
-//const char* password = "fe6e666e";
 
 WiFiClient _devClient;
 
