@@ -65,19 +65,13 @@ void setup()
   Serial.print( "\nConnecting to:  \"" );
   Serial.print( NETWORK_NAME );
   Serial.println( "\"" );
-//  Serial.print( "\" with password:  \"" );
-//  Serial.print( pwd );
-//  Serial.println( "\"" );
 
-//  delay( 1000 );
   WiFi.begin( NETWORK_NAME, NETWORK_PW );
-//  delay( 1000 );
   
   while( WiFi.status() != WL_CONNECTED )
   {
     Serial.println( "Waiting to connect" );
     delay( 500 );
-    //WiFi.begin( ssid, password );
   }
 
   Serial.println( "WiFi Connected and ready to go!" );
