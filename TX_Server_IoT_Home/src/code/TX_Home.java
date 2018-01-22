@@ -37,7 +37,7 @@ public class TX_Home
 		}
 		catch( ArrayIndexOutOfBoundsException e )
 		{
-			System.out.println( "You suck!" );
+			System.out.println( "Insufficient args." );
 			e.printStackTrace();
 		}
 		
