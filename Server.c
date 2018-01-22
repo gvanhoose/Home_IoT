@@ -26,13 +26,14 @@
 #define CHILD_ERROR -10
 #define EXECV_ERROR -11
 
+// Process waits in this function, returns data received from super client
 int receiveMessage( int listenerFD, char* rxData )
 {
 	int clientFD;
 
 	if( (clientFD = accept( listenerFD, (struct sockaddr*) NULL, NULL )) < 0 )
 	{
-		perror( "receiveMsg>accept" );
+//		perror( "receiveMsg>accept" );
 		return ACCEPT_ERROR;
 	}
 
@@ -40,23 +41,23 @@ int receiveMessage( int listenerFD, char* rxData )
 
 	if( (bytesRead = read( clientFD, rxData, BUFFER_LENGTH - 1 )) < 0 )
 	{
-		perror( "receveMsg>read" );
+//		perror( "receveMsg>read" );
 		return READ_ERROR;
 	}
 
-//	printf( "receiveMessage: Raw received: \"%s\"\n", rxData );
 	rxData[ bytesRead ] = '\0';
 
 	return bytesRead;
 }
 
+// Returns a file descriptor to the receiving socket, or a negative number upon error. (errno is set)
 int openSocketAndBind( struct sockaddr_in sockAddr )
 {
 	int listenerFD;
 
 	if( (listenerFD = socket( AF_INET, SOCK_STREAM, 0 )) < 0 )
 	{
-		perror( "opScktBnd>socket" );
+//		perror( "opScktBnd>socket" );
 		return SOCKET_ERROR;
 	}
 
@@ -67,13 +68,13 @@ int openSocketAndBind( struct sockaddr_in sockAddr )
 
 	if( bind( listenerFD, (struct sockaddr*) &sockAddr, sizeof( sockAddr ) ) < 0 )
 	{
-		perror( "opScktBnd>bind" );
+//		perror( "opScktBnd>bind" );
 		return BIND_ERROR;
 	}
 
 	if( listen( listenerFD, BACKLOG_MAX ) < 0 )
 	{
-		perror( "opScktBnd>listen" );
+//		perror( "opScktBnd>listen" );
 		return LISTEN_ERROR;
 	}
 
@@ -83,23 +84,25 @@ int openSocketAndBind( struct sockaddr_in sockAddr )
 /**
  * Prints in target a null-terminated substring bounded by, but not including, the first respective occurrences of the specified opening and closing delimiters of type char
  * The delimiters must be distinct (i.e.:  They cannot hold the same value)
+ * The caller must guarantee that the target is at least (strlen(src)) chars in size
+ * The caller must also guarantee that the src is null-terminated
  * substr( "Hello world!", char* target, 'H', 'l' ) would print in target the string "e\0"
  * substr( "Hello world!", char* target, 'l', 'o' ) would print in target the string "l\0"
- * substr( "Hello world!", char* target, 'o', 'l' ) would print in target the string "wor\0"
+ * substr( "Hello world!", char* target, 'o', 'l' ) would print in target the string " wor\0"
  * returns the size of the substring printed in target, 0 if no substring was found, and -1 if there was an error
  */
 int substr( char* src, char* target, char openDelim, char closeDelim )
 {
 	if( src == NULL || target == NULL || openDelim == closeDelim )
 	{
-		printf( "Bad input\n" );
+//		perror( "substr>Bad Input" );
 		return -1;
 	}
 
 	char current;
-	int openFound = 0, closeFound = 0, i = 0, outSize = 0;
+	int openFound = 0, closeFound = 0, outSize = 0;
 
-	while( (current = *(src + i++) ) != '\0' )
+	while( (current = *(src++) ) != '\0' )
 	{
 
 		if( current == closeDelim && openFound )
@@ -121,6 +124,8 @@ int substr( char* src, char* target, char openDelim, char closeDelim )
 	return outSize;
 }
 
+// spawns a child process which runs a .jar program, which is configured to send the appropriate data to the IP address of the destination device
+// In the future, txDevice will be a device ID, not an IP address
 int sendDevData( char* txDevice,  char* command )
 {
 
@@ -137,42 +142,18 @@ int sendDevData( char* txDevice,  char* command )
 	}
 	if( childPID == 0 )	// child code
 	{
-//		printf( "\t\tChild reporting!\n" );
-//		printf( "\t\tChild PID:  %d\n", getpid() );
 
 		char* cmdLine [] = { "java", "-jar", "Dev_TX_Server.jar", txDevice, command, NULL };
 
 		execvp( cmdLine[0], cmdLine );
 
-//		char* jarArgs [2];
-////		jarArgs[0] = "home/george/Desktop/Projects/Home_IoT/java -jar ArgTest.jar";
-//		jarArgs[0] = "ls";
-//		jarArgs[1] = "-l";
-//
-////		jarArgs[1] = txDevice;
-////		jarArgs[2] = command;
-//
-//		execv( jarArgs[0], jarArgs );
-
-		perror( "execv" );
+//		perror( "execv" );
 		return EXECV_ERROR;
-//		char jarCli [ BUFFER_LENGTH + 32 ];	// +32 because command line must start with "java -jar filename.jar" and must also include 2 spaces beyond that... 32 should be a good, round number
-//		memset( jarCli, '\0', BUFFER_LENGTH+32 );
-//
-//		snprintf( jarCli, BUFFER_LENGTH+32, "java -jar ArgTest.jar %s %s", txDevice, command );
-//
-//		char** jarPack;
-//		jarPack[0] = jarCli;
-//
-////		printf( "\t\tAbout to run execv( %s, %s )\n", txDevice, command );
-////		printf( "\t\tActual arg: \"%s\",\"%s\"\n", *jarPack );
-//		execv( jarCli, jarPack );
-////		perror( "sendDevData>fork>execv" );
-//		return EXECV_ERROR;
+		
 	}
 	if( childPID < 0 )
 	{
-		perror( "sendDevData>fork childPID<0" );
+//		perror( "sendDevData>fork childPID<0" );
 		return CHILD_ERROR;
 	}
 	return 0;
@@ -181,12 +162,10 @@ int sendDevData( char* txDevice,  char* command )
 int main()
 {
 
-	char pid_str [35];
-
-	memset( pid_str, '\0', 35 );
-
-	snprintf( pid_str, 35, "Server PID:  %d", getpid() );
-
+//	char pid_str [32];
+//	memset( pid_str, '\0', 32 );
+//	snprintf( pid_str, 31, "Server PID:  %d", getpid() );
+//
 //	printf( "%s\n", pid_str );
 
 	struct sockaddr_in sockAddr;
@@ -204,18 +183,11 @@ int main()
 	char cmdTar [ BUFFER_LENGTH ];
 	char cmdCmd [ BUFFER_LENGTH ];
 
-	memset( rxData, '\0', BUFFER_LENGTH );
-	memset( sender, '\0', BUFFER_LENGTH );
-	memset( txLeng, '\0', 4 );
-	memset( cmdTar, '\0', BUFFER_LENGTH );
-	memset( cmdCmd, '\0', BUFFER_LENGTH );
-
 	int recReturnValue;
 	int loopNumber = 0;
 
 	while( 1 )
 	{
-//		printf( "Beginning loop #%d\n", ++loopNumber );
 
 		memset( rxData, '\0', BUFFER_LENGTH );
 		memset( sender, '\0', BUFFER_LENGTH );
@@ -223,11 +195,7 @@ int main()
 		memset( cmdTar, '\0', BUFFER_LENGTH );
 		memset( cmdCmd, '\0', BUFFER_LENGTH );
 
-		recReturnValue = receiveMessage( listenerFD, rxData );
-
-//		printf( "Received %d bytes: \"%s\"\n", recReturnValue, rxData );
-		if( recReturnValue >= 0 )
-//		if( (recReturnValue = receiveMessage( listenerFD, rxData )) >= 0 )
+		if( (recReturnValue = receiveMessage( listenerFD, rxData )) >= 0 )
 		{
 			if( strcmp( "quit", rxData ) == 0 )
 			{
@@ -235,17 +203,10 @@ int main()
 				break;
 			}
 
-//			printf( "==========================================================\n" );
-////			printf( "\t     Received:  \"%s\"\n", rxData );
 			substr( rxData, cmdTar, '<', '>' );
 			substr( rxData, txLeng, '[', ']' );
 			substr( rxData, cmdCmd, '{', '}' );
 			substr( rxData, sender, '(', ')' );
-
-//			printf( "\t    TX Length:  %s\n", txLeng );
-//			printf( "\t       Sender:  %s\n", sender );
-//			printf( "\tTarget Device:  %s\n", cmdTar );
-//			printf( "\t      Command:  %s\n", cmdCmd );
 
 			if( strcmp( "Network quit", cmdCmd ) == 0 )
 			{
@@ -270,10 +231,7 @@ int main()
 		}
 	}
 
-//	printf( "Disposing of resources\n" );
 	close( listenerFD );
-
-//	printf( "Thank you!\nCome again!\n" );
 
 	return 0;
 }
